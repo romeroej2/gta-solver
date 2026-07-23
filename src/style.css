@@ -306,3 +306,44 @@ details summary {
   cursor: pointer;
   margin: 8px 0;
 }
+
+/* math */
+.math-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.math-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--dim);
+  flex: 1;
+}
+
+.math-form input {
+  font-family: inherit;
+  font-size: 20px;
+  color: var(--green);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 10px;
+  width: 100%;
+}
+
+.math-row {
+  display: flex;
+  gap: 10px;
+}
+
+.math-solution {
+  border: 1px solid var(--line);
+  padding: 12px;
+}
+
+.math-link {
+  font-size: 17px;
+  line-height: 1.6;
+}

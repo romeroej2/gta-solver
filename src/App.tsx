@@ -22,7 +22,7 @@ const COLS = 2;
 // otherwise the result is flagged as low confidence.
 const MARGIN_THRESHOLD = 0.05;
 
-type Tab = "solve" | "cayo";
+type Tab = "solve" | "cayo" | "math";
 
 /** Sub-regions of the casino capture frame (fractions of the guide box),
  * matching the in-game puzzle window proportions. */
@@ -499,6 +499,107 @@ function Cayo() {
   );
 }
 
+/* ---------------- Math (circuit target-sum) ---------------- */
+
+const PERMS: [number, number, number][] = [
+  [0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0],
+];
+
+/**
+ * The circuit hack: three numbers each link to one modifier (×1, ×2, ×10 —
+ * each used once); the weighted sum must equal the target. Only 6 possible
+ * assignments, so enumerate them.
+ */
+function MathSolve() {
+  const [target, setTarget] = useState("");
+  const [nums, setNums] = useState(["", "", ""]);
+  const [mults, setMults] = useState(["1", "2", "10"]);
+
+  const t = parseInt(target, 10);
+  const n = nums.map((v) => parseInt(v, 10));
+  const m = mults.map((v) => parseInt(v, 10));
+  const ready = !isNaN(t) && n.every((v) => !isNaN(v)) && m.every((v) => !isNaN(v));
+
+  const solutions = ready
+    ? PERMS.filter((p) => n[0] * m[p[0]] + n[1] * m[p[1]] + n[2] * m[p[2]] === t)
+    : [];
+
+  const setNum = (i: number, v: string) =>
+    setNums((a) => a.map((x, j) => (j === i ? v : x)));
+  const setMult = (i: number, v: string) =>
+    setMults((a) => a.map((x, j) => (j === i ? v : x)));
+
+  return (
+    <div className="solve">
+      <p className="hint">
+        Enter the target and the three numbers. Each number links to one
+        modifier; adjust the modifiers if this variant uses different ones.
+      </p>
+      <div className="math-form">
+        <label>
+          Target
+          <input
+            type="number"
+            inputMode="numeric"
+            value={target}
+            onChange={(e) => setTarget(e.target.value)}
+            placeholder="500"
+          />
+        </label>
+        <div className="math-row">
+          {nums.map((v, i) => (
+            <label key={i}>
+              #{i + 1}
+              <input
+                type="number"
+                inputMode="numeric"
+                value={v}
+                onChange={(e) => setNum(i, e.target.value)}
+              />
+            </label>
+          ))}
+        </div>
+        <details>
+          <summary className="hint">Modifiers (×{mults.join(", ×")})</summary>
+          <div className="math-row">
+            {mults.map((v, i) => (
+              <label key={i}>
+                ×
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={v}
+                  onChange={(e) => setMult(i, e.target.value)}
+                />
+              </label>
+            ))}
+          </div>
+        </details>
+      </div>
+
+      {ready && solutions.length === 0 && (
+        <p className="warn">
+          No assignment hits {t}. Double-check the numbers (or the modifiers).
+        </p>
+      )}
+      {solutions.map((p, si) => (
+        <div className="result math-solution" key={si}>
+          <p className="ok">{solutions.length > 1 ? `Option ${si + 1}` : "Link:"}</p>
+          {p.map((mi, ni) => (
+            <p key={ni} className="math-link">
+              <b>{n[ni]}</b> → <b>×{m[mi]}</b> modifier
+              {"  "}({n[ni]} × {m[mi]} = {n[ni] * m[mi]})
+            </p>
+          ))}
+          <p className="hint">
+            {p.map((mi, ni) => `${n[ni]}×${m[mi]}`).join(" + ")} = {t}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ---------------- App ---------------- */
 
 export default function App() {
@@ -521,9 +622,17 @@ export default function App() {
           >
             Cayo
           </button>
+          <button
+            className={tab === "math" ? "active" : ""}
+            onClick={() => setTab("math")}
+          >
+            Math
+          </button>
         </nav>
       </header>
-      {tab === "solve" ? <Solve /> : <Cayo />}
+      {tab === "solve" && <Solve />}
+      {tab === "cayo" && <Cayo />}
+      {tab === "math" && <MathSolve />}
     </div>
   );
 }

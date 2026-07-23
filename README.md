@@ -50,6 +50,13 @@ of the target print, so the app matches rows against the print itself:
 - Each slice is matched to a band by normalized correlation over small shifts
   and crop scales.
 
+### Math (circuit target-sum)
+
+The circuit puzzle where three numbers link to three modifiers (×1, ×2, ×10)
+and the weighted sum must hit a target. Type the target and the three
+numbers — the app enumerates the six possible assignments and shows which
+number goes to which modifier. Modifier values are editable for variants.
+
 ## Develop
 
 ```
