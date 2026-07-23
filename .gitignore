@@ -1,0 +1,8 @@
+node_modules
+dist
+.vercel
+*.tsbuildinfo
+
+# local test photos (personal)
+scripts/*.png
+!scripts/cheatsheet.png
