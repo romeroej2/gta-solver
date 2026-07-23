@@ -16,8 +16,9 @@ screen.
 > trademarks/copyrights of their respective owners. This is an unofficial
 > fan-made tool for personal use.
 
-**Live app:** deployed on Vercel — open it in iOS Safari / Android Chrome and
-allow camera access ("Add to Home Screen" recommended).
+**Try it:** [https://gta-solver.vercel.app/](https://gta-solver.vercel.app/) —
+open it in iOS Safari / Android Chrome and allow camera access
+("Add to Home Screen" recommended).
 
 ## Modes
 
