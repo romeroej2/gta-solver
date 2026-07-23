@@ -347,3 +347,38 @@ details summary {
   font-size: 17px;
   line-height: 1.6;
 }
+
+/* host */
+.host-seq {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 15px;
+  color: var(--green);
+}
+
+.host-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-x: auto;
+}
+
+.host-row {
+  display: flex;
+  gap: 4px;
+}
+
+.host-row img {
+  width: 9%;
+  min-width: 26px;
+  border: 1px solid var(--line);
+  opacity: 0.6;
+}
+
+.host-row img.hit {
+  border: 2px solid var(--green);
+  opacity: 1;
+  box-shadow: 0 0 8px rgba(125, 255, 155, 0.6);
+}

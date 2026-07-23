@@ -1,14 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   canvasToDataURL,
+  contentBBoxCrop,
   cropFromVideo,
   cropRegion,
   detectCayoRegions,
   detectHBands,
   largestBlobCrop,
+  groupPairBands,
   gridVariants,
+  pairSim,
+  pairVec,
   printSim,
+  readBoxedDigit,
+  readSlottedDisplay,
   shiftSim,
+  splitIpPairs,
+  textBands,
   sliceGrid,
   sliceRows,
   toGrid,
@@ -22,7 +30,7 @@ const COLS = 2;
 // otherwise the result is flagged as low confidence.
 const MARGIN_THRESHOLD = 0.05;
 
-type Tab = "solve" | "cayo" | "math";
+type Tab = "solve" | "cayo" | "math" | "host";
 
 /** Sub-regions of the casino capture frame (fractions of the guide box),
  * matching the in-game puzzle window proportions. */
@@ -505,15 +513,68 @@ const PERMS: [number, number, number][] = [
   [0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0],
 ];
 
+/** Sub-regions of the math capture frame (fractions of the guide box). */
+const MATH_BOX_TARGET = { x: 0.35, y: 0.02, w: 0.27, h: 0.15 };
+const MATH_BOX_NUMS = { x: 0.01, y: 0.18, w: 0.15, h: 0.7 };
+const MATH_FRAME_ASPECT = 0.9;
+
 /**
  * The circuit hack: three numbers each link to one modifier (×1, ×2, ×10 —
  * each used once); the weighted sum must equal the target. Only 6 possible
- * assignments, so enumerate them.
+ * assignments, so enumerate them. Values come from a photo (7-seg OCR) and
+ * stay editable for corrections.
  */
 function MathSolve() {
+  const [scanned, setScanned] = useState(false);
   const [target, setTarget] = useState("");
   const [nums, setNums] = useState(["", "", ""]);
   const [mults, setMults] = useState(["1", "2", "10"]);
+
+  const onShot = (frame: HTMLCanvasElement) => {
+    const t = readSlottedDisplay(
+      cropRegion(
+        frame,
+        MATH_BOX_TARGET.x,
+        MATH_BOX_TARGET.y,
+        MATH_BOX_TARGET.w,
+        MATH_BOX_TARGET.h,
+        480,
+        200,
+      ),
+      3,
+    );
+    const numsC = cropRegion(
+      frame,
+      MATH_BOX_NUMS.x,
+      MATH_BOX_NUMS.y,
+      MATH_BOX_NUMS.w,
+      MATH_BOX_NUMS.h,
+      240,
+      960,
+    );
+    const ns = [0, 1, 2].map((i) =>
+      readBoxedDigit(cropRegion(numsC, 0, i / 3, 1, 1 / 3, 240, 320)),
+    );
+    setTarget(t === null ? "" : String(t));
+    setNums(ns.map((n) => (n === null ? "" : String(n))));
+    setScanned(true);
+  };
+
+  if (!scanned) {
+    return (
+      <div className="solve">
+        <Camera
+          guideAspect={MATH_FRAME_ASPECT}
+          label="Fit the puzzle — target & numbers in their boxes"
+          subBoxes={[
+            { ...MATH_BOX_TARGET, label: "target" },
+            { ...MATH_BOX_NUMS, label: "3 numbers" },
+          ]}
+          onCapture={onShot}
+        />
+      </div>
+    );
+  }
 
   const t = parseInt(target, 10);
   const n = nums.map((v) => parseInt(v, 10));
@@ -532,9 +593,14 @@ function MathSolve() {
   return (
     <div className="solve">
       <p className="hint">
-        Enter the target and the three numbers. Each number links to one
-        modifier; adjust the modifiers if this variant uses different ones.
+        Scanned values below — fix any the camera misread. Each number links
+        to one modifier.
       </p>
+      <div className="row">
+        <button className="alt" onClick={() => setScanned(false)}>
+          Rescan
+        </button>
+      </div>
       <div className="math-form">
         <label>
           Target
@@ -600,6 +666,158 @@ function MathSolve() {
   );
 }
 
+/* ---------------- Host (find the IP in the number wall) ---------------- */
+
+const HOST_FRAME_ASPECT = 0.63;
+const HOST_BOX_IP = { x: 0.33, y: 0.11, w: 0.29, h: 0.1 };
+const HOST_BOX_GRID = { x: 0.07, y: 0.31, w: 0.78, h: 0.62 };
+
+interface HostCell {
+  row: number;
+  col: number;
+  img: string;
+  hit: number; // -1 = no, otherwise sequence position 0..3
+}
+
+function Host() {
+  const [rows, setRows] = useState<HostCell[][] | null>(null);
+  const [ipImgs, setIpImgs] = useState<string[]>([]);
+  const [failed, setFailed] = useState(false);
+
+  const onShot = (frame: HTMLCanvasElement) => {
+    setFailed(false);
+    const ipBB = contentBBoxCrop(
+      cropRegion(
+        frame,
+        HOST_BOX_IP.x,
+        HOST_BOX_IP.y,
+        HOST_BOX_IP.w,
+        HOST_BOX_IP.h,
+        640,
+        128,
+      ),
+      0.02,
+    );
+    const ipSpans = splitIpPairs(textBands(ipBB, "x", 0.004, 0.012), 4);
+    if (!ipSpans) {
+      setFailed(true);
+      return;
+    }
+    const ipCanvases = ipSpans.map(([x0, x1]) =>
+      cropRegion(ipBB, x0, 0, x1 - x0, 1, 96, 64),
+    );
+    const ipVecs = ipCanvases.map(pairVec);
+    setIpImgs(ipCanvases.map((c) => canvasToDataURL(c, 72)));
+    const gridC = cropRegion(
+      frame,
+      HOST_BOX_GRID.x,
+      HOST_BOX_GRID.y,
+      HOST_BOX_GRID.w,
+      HOST_BOX_GRID.h,
+      1024,
+      512,
+    );
+    const rowBands = textBands(gridC, "y", 0.01, 0.02);
+    const flat: { cell: HostCell; vec: Float32Array }[] = [];
+    const grid: HostCell[][] = [];
+    rowBands.forEach(([y0, y1], r) => {
+      const rowC = cropRegion(gridC, 0, y0, 1, y1 - y0, 1024, 64);
+      const groups = groupPairBands(textBands(rowC, "x", 0.003, 0.008));
+      const rowCells: HostCell[] = [];
+      groups.forEach(([x0, x1], c) => {
+        const cellC = cropRegion(rowC, x0, 0, x1 - x0, 1, 96, 64);
+        const cell: HostCell = {
+          row: r + 1,
+          col: c + 1,
+          img: canvasToDataURL(cellC, 64),
+          hit: -1,
+        };
+        rowCells.push(cell);
+        flat.push({ cell, vec: pairVec(cellC) });
+      });
+      grid.push(rowCells);
+    });
+    if (flat.length < 8) {
+      setFailed(true);
+      return;
+    }
+    let best = { score: -Infinity, i: 0 };
+    for (let i = 0; i + 3 < flat.length; i++) {
+      let s = 0;
+      for (let k = 0; k < 4; k++) s += pairSim(flat[i + k].vec, ipVecs[k]);
+      if (s > best.score) best = { score: s, i };
+    }
+    for (let k = 0; k < 4; k++) flat[best.i + k].cell.hit = k;
+    setRows(grid);
+  };
+
+  const reset = () => {
+    setRows(null);
+    setIpImgs([]);
+    setFailed(false);
+  };
+
+  return (
+    <div className="solve">
+      {!rows && (
+        <>
+          {failed && (
+            <p className="warn">Couldn't read that — try again, closer.</p>
+          )}
+          <Camera
+            guideAspect={HOST_FRAME_ASPECT}
+            label="Fit the blue window — IP & number wall in their boxes"
+            subBoxes={[
+              { ...HOST_BOX_IP, label: "target IP" },
+              { ...HOST_BOX_GRID, label: "number wall" },
+            ]}
+            onCapture={onShot}
+          />
+        </>
+      )}
+
+      {rows && (
+        <div className="result">
+          <p className="ok">Sequence found — press these in order:</p>
+          <div className="host-seq">
+            {rows.flat().filter((c) => c.hit >= 0).sort((a, b) => a.hit - b.hit)
+              .map((c) => (
+                <span key={c.hit}>
+                  {c.hit + 1}. row {c.row}, #{c.col}
+                </span>
+              ))}
+          </div>
+          <div className="host-grid">
+            {rows.map((row, ri) => (
+              <div key={ri} className="host-row">
+                {row.map((c, ci) => (
+                  <img
+                    key={ci}
+                    src={c.img}
+                    className={c.hit >= 0 ? "hit" : ""}
+                    alt={`r${c.row}c${c.col}`}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+          <details>
+            <summary className="hint">Target pairs (as read)</summary>
+            <div className="host-seq">
+              {ipImgs.map((s, i) => (
+                <img key={i} src={s} alt={`pair ${i + 1}`} />
+              ))}
+            </div>
+          </details>
+          <div className="row">
+            <button onClick={reset}>Retake</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ---------------- App ---------------- */
 
 export default function App() {
@@ -628,11 +846,18 @@ export default function App() {
           >
             Math
           </button>
+          <button
+            className={tab === "host" ? "active" : ""}
+            onClick={() => setTab("host")}
+          >
+            Host
+          </button>
         </nav>
       </header>
       {tab === "solve" && <Solve />}
       {tab === "cayo" && <Cayo />}
       {tab === "math" && <MathSolve />}
+      {tab === "host" && <Host />}
     </div>
   );
 }

@@ -53,9 +53,20 @@ of the target print, so the app matches rows against the print itself:
 ### Math (circuit target-sum)
 
 The circuit puzzle where three numbers link to three modifiers (×1, ×2, ×10)
-and the weighted sum must hit a target. Type the target and the three
-numbers — the app enumerates the six possible assignments and shows which
-number goes to which modifier. Modifier values are editable for variants.
+and the weighted sum must hit a target. One snap — the target display and
+the three number boxes are read with 7-segment OCR (template matching
+against the game's flip-clock font, single-segment disambiguation for
+lookalike digits) — then the app enumerates the six possible assignments.
+Scanned values stay editable for corrections.
+
+### Host (connecting-to-the-host IP search)
+
+The number-wall puzzle: find the target IP's four pairs in consecutive
+cells (sequences can wrap across rows). One snap — the target pairs and
+every grid cell are segmented via brightness-band profiles (color-blind to
+the red/white text), then matched image-to-image (no OCR needed: same font),
+and the best consecutive run of four is highlighted on a rendered copy of
+the grid.
 
 ## Develop
 
