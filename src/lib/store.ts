@@ -14,12 +14,19 @@ export interface LoadedRef extends PrintRef {
   compVecs: Vec[];
 }
 
-export async function loadRefs(): Promise<LoadedRef[]> {
-  return Promise.all(
+let cached: Promise<LoadedRef[]> | null = null;
+
+/**
+ * Lazily load + vectorize the answer sheet. Deferred until the first casino
+ * solve so visitors don't download the 20 reference images up front.
+ */
+export function loadRefs(): Promise<LoadedRef[]> {
+  cached ??= Promise.all(
     defaultRefs.map(async (r) => ({
       ...r,
       targetVec: await dataURLToVec(r.target),
       compVecs: await Promise.all(r.comps.map(dataURLToVec)),
     })),
   );
+  return cached;
 }

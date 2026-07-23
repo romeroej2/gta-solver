@@ -268,18 +268,12 @@ function solveCasino(
   };
 }
 
-function Solve({ refs }: { refs: LoadedRef[] }) {
+function Solve() {
   const [result, setResult] = useState<SolveResult | null>(null);
 
-  if (refs.length === 0) {
-    return (
-      <div className="empty">
-        <p>Loading answer sheet…</p>
-      </div>
-    );
-  }
-
-  const onShot = (frame: HTMLCanvasElement) => {
+  const onShot = async (frame: HTMLCanvasElement) => {
+    // answer sheet loads on first use, not on page load
+    const refs = await loadRefs();
     const targetC = cropRegion(
       frame,
       BOX_TARGET.x,
@@ -509,11 +503,6 @@ function Cayo() {
 
 export default function App() {
   const [tab, setTab] = useState<Tab>("solve");
-  const [refs, setRefs] = useState<LoadedRef[]>([]);
-
-  useEffect(() => {
-    loadRefs().then(setRefs);
-  }, []);
 
   return (
     <div className="app">
@@ -534,7 +523,7 @@ export default function App() {
           </button>
         </nav>
       </header>
-      {tab === "solve" ? <Solve refs={refs} /> : <Cayo />}
+      {tab === "solve" ? <Solve /> : <Cayo />}
     </div>
   );
 }

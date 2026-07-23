@@ -1,20 +1,15 @@
 # GTA Fingerprint Solver
 
-A **helper / companion tool** for the GTA Online fingerprint hacking
-minigames. Open it on your phone, point the camera at your TV or monitor,
-snap one photo, and it shows you the solution — like a smart, automatic
-version of the community cheat-sheet images players already keep on a second
-screen.
+A **companion app** for the GTA Online fingerprint hacking minigames — a
+smart, automatic version of the reference sheets players already keep on a
+second screen. Open it on your phone, point the camera at your TV or
+monitor, snap one photo, and it shows you the matching solution.
 
-> **Not a cheat.** This app does not modify the game, inject code, read game
-> memory, automate inputs, or interact with GTA Online in any way. It only
-> looks at a photo you take of your own screen. You still play the minigame
-> yourself.
->
-> **Not affiliated with, endorsed, or sponsored by Rockstar Games or
-> Take-Two Interactive.** Grand Theft Auto and all in-game imagery are
-> trademarks/copyrights of their respective owners. This is an unofficial
-> fan-made tool for personal use.
+Everything happens on your phone, from a photo of your own screen: the app
+is a lookup aid, and you play the minigame yourself as normal.
+
+> Unofficial fan project made by players, for players. Grand Theft Auto and
+> all in-game imagery belong to Rockstar Games / Take-Two Interactive.
 
 **Try it:** [https://gta-solver.vercel.app/](https://gta-solver.vercel.app/) —
 open it in iOS Safari / Android Chrome and allow camera access
@@ -78,7 +73,7 @@ npx vercel --prod
 
 - All matching runs client-side in the browser — no backend, no images leave
   the phone.
-- Game imagery (reference fingerprints) belongs to Rockstar Games /
-  Take-Two Interactive; included only as a gameplay aid, the same material
-  found in community-made cheat sheets. If you are a rights holder and want
-  it removed, open an issue.
+- Reference fingerprint imagery belongs to Rockstar Games / Take-Two
+  Interactive and is included as a gameplay reference, the same material
+  found in community-made guides. Rights holders: open an issue and it will
+  be removed promptly.

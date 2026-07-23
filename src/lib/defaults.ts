@@ -3,14 +3,14 @@
 
 import type { PrintRef } from "./store";
 
-const files = import.meta.glob("../assets/refs/*.png", {
+const files = import.meta.glob("../assets/refs/*.jpg", {
   eager: true,
   query: "?url",
   import: "default",
 }) as Record<string, string>;
 
 function url(name: string): string {
-  const hit = Object.entries(files).find(([k]) => k.endsWith(`/${name}.png`));
+  const hit = Object.entries(files).find(([k]) => k.endsWith(`/${name}.jpg`));
   if (!hit) throw new Error(`missing ref asset: ${name}`);
   return hit[1];
 }

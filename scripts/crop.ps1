@@ -5,6 +5,12 @@ $src = [System.Drawing.Bitmap]::FromFile("D:\exa-tec\GTA-Solver\scripts\cheatshe
 $outDir = "D:\exa-tec\GTA-Solver\src\assets\refs"
 New-Item -ItemType Directory -Force $outDir | Out-Null
 
+$jpegCodec = [System.Drawing.Imaging.ImageCodecInfo]::GetImageEncoders() |
+    Where-Object { $_.MimeType -eq "image/jpeg" }
+$encParams = New-Object System.Drawing.Imaging.EncoderParameters(1)
+$encParams.Param[0] = New-Object System.Drawing.Imaging.EncoderParameter(
+    [System.Drawing.Imaging.Encoder]::Quality, [long]82)
+
 function Crop($x, $y, $w, $h, $outW, $outH, $name) {
     $bmp = New-Object System.Drawing.Bitmap($outW, $outH)
     $g = [System.Drawing.Graphics]::FromImage($bmp)
@@ -14,7 +20,7 @@ function Crop($x, $y, $w, $h, $outW, $outH, $name) {
         (New-Object System.Drawing.Rectangle($x, $y, $w, $h)),
         [System.Drawing.GraphicsUnit]::Pixel)
     $g.Dispose()
-    $bmp.Save("$outDir\$name.png", [System.Drawing.Imaging.ImageFormat]::Png)
+    $bmp.Save("$outDir\$name.jpg", $jpegCodec, $encParams)
     $bmp.Dispose()
 }
 
