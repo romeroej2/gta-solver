@@ -1,8 +1,20 @@
 # GTA Fingerprint Solver
 
-Phone webapp that solves the GTA Online fingerprint hacking minigames for you.
-Open it on your phone, point the camera at your TV or monitor, snap one photo,
-and it tells you the answer.
+A **helper / companion tool** for the GTA Online fingerprint hacking
+minigames. Open it on your phone, point the camera at your TV or monitor,
+snap one photo, and it shows you the solution — like a smart, automatic
+version of the community cheat-sheet images players already keep on a second
+screen.
+
+> **Not a cheat.** This app does not modify the game, inject code, read game
+> memory, automate inputs, or interact with GTA Online in any way. It only
+> looks at a photo you take of your own screen. You still play the minigame
+> yourself.
+>
+> **Not affiliated with, endorsed, or sponsored by Rockstar Games or
+> Take-Two Interactive.** Grand Theft Auto and all in-game imagery are
+> trademarks/copyrights of their respective owners. This is an unofficial
+> fan-made tool for personal use.
 
 **Live app:** deployed on Vercel — open it in iOS Safari / Android Chrome and
 allow camera access ("Add to Home Screen" recommended).
@@ -65,5 +77,7 @@ npx vercel --prod
 
 - All matching runs client-side in the browser — no backend, no images leave
   the phone.
-- Game imagery (reference fingerprints) belongs to Rockstar Games; used here
-  as gameplay aid material.
+- Game imagery (reference fingerprints) belongs to Rockstar Games /
+  Take-Two Interactive; included only as a gameplay aid, the same material
+  found in community-made cheat sheets. If you are a rights holder and want
+  it removed, open an issue.
